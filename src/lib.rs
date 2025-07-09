@@ -1,5 +1,14 @@
+mod distortions;
+mod filters;
+mod oversamplers;
+
 use nih_plug::prelude::*;
 use std::sync::Arc;
+
+use crate::{
+    distortions::soft_clipping,
+    oversamplers::{NaiveOversampler, Oversampler, Oversampling, BLOCK_SIZE},
+};
 
 // This is a shortened version of the gain example with most comments removed, check out
 // https://github.com/robbert-vdh/nih-plug/blob/master/plugins/examples/gain/src/lib.rs to get
@@ -7,6 +16,7 @@ use std::sync::Arc;
 
 struct DistUrb {
     params: Arc<DistUrbParams>,
+    naive_oversamplers: Vec<NaiveOversampler>,
 }
 
 #[derive(Params)]
@@ -19,12 +29,15 @@ struct DistUrbParams {
     pub pre_gain: FloatParam,
     #[id = "post_gain"]
     pub post_gain: FloatParam,
+    #[id = "oversampler"]
+    pub oversampler: EnumParam<Oversampler>,
 }
 
 impl Default for DistUrb {
     fn default() -> Self {
         Self {
             params: Arc::new(DistUrbParams::default()),
+            naive_oversamplers: vec![],
         }
     }
 }
@@ -75,6 +88,7 @@ impl Default for DistUrbParams {
             // `.with_step_size(0.1)` function to get internal rounding.
             .with_value_to_string(formatters::v2s_f32_gain_to_db(2))
             .with_string_to_value(formatters::s2v_f32_gain_to_db()),
+            oversampler: EnumParam::new("Oversampler", Oversampler::None),
         }
     }
 }
@@ -129,12 +143,19 @@ impl Plugin for DistUrb {
         // Resize buffers and perform other potentially expensive initialization operations here.
         // The `reset()` function is always called right after this function. You can remove this
         // function if you do not need it.
+        self.naive_oversamplers
+            .push(NaiveOversampler::new(_buffer_config.sample_rate));
+        self.naive_oversamplers
+            .push(NaiveOversampler::new(_buffer_config.sample_rate));
         true
     }
 
     fn reset(&mut self) {
         // Reset buffers and envelopes here. This can be called from the audio thread and may not
         // allocate. You can remove this function if you do not need it.
+        for oversampler in &mut self.naive_oversamplers {
+            oversampler.reset()
+        }
     }
 
     fn process(
@@ -143,24 +164,36 @@ impl Plugin for DistUrb {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        for channel_samples in buffer.iter_samples() {
+        for (_, mut block) in buffer.iter_blocks(BLOCK_SIZE) {
             // Smoothing is optionally built into the parameters themselves
-            let pre_gain = self.params.pre_gain.smoothed.next();
-            let post_gain = self.params.post_gain.smoothed.next();
-            let top: f32 = 1.0;
-            let bottom: f32 = -1.0;
+            let pre_gain: f32 = self.params.pre_gain.smoothed.next();
+            let post_gain: f32 = self.params.post_gain.smoothed.next();
+            let oversampler_type = self.params.oversampler.value();
+            let channels = block.channels();
 
-            // piece-wise Soft clipping
-            for sample in channel_samples {
-                *sample *= pre_gain;
-                if *sample <= bottom {
-                    *sample = -0.66666666;
-                } else if *sample >= top {
-                    *sample = 0.66666666;
-                } else {
-                    *sample = *sample - (sample.powf(3.0) / 3.0);
+            for channel_index in 0..channels {
+                match oversampler_type {
+                    Oversampler::None => {
+                        soft_clipping(pre_gain, post_gain, block.get_mut(channel_index).unwrap());
+                    }
+                    Oversampler::NaiveOversampler => {
+                        match channel_index {
+                            0 => self.naive_oversamplers[0].process(
+                                block.get_mut(channel_index).unwrap(),
+                                soft_clipping,
+                                pre_gain,
+                                post_gain,
+                            ),
+                            1 => self.naive_oversamplers[1].process(
+                                block.get_mut(channel_index).unwrap(),
+                                soft_clipping,
+                                pre_gain,
+                                post_gain,
+                            ),
+                            _ => panic!("Dual channel only"),
+                        };
+                    }
                 }
-                *sample *= post_gain;
             }
         }
 
@@ -170,7 +203,7 @@ impl Plugin for DistUrb {
 
 impl ClapPlugin for DistUrb {
     const CLAP_ID: &'static str = "com.zar3bski.DistUrb";
-    const CLAP_DESCRIPTION: Option<&'static str> = Some("A short description of your plugin");
+    const CLAP_DESCRIPTION: Option<&'static str> = Some("General purpose distortion");
     const CLAP_MANUAL_URL: Option<&'static str> = Some(Self::URL);
     const CLAP_SUPPORT_URL: Option<&'static str> = None;
 
