@@ -30,8 +30,7 @@ jobs:
           cargo xtask bundle dist-urb --release
       - name: Bundle artifacts in an archive
         run: |
-          cd target/bundled
-          tar -cf ../../disturb-${{ matrix.os }}-${{ github.ref_name }}.tar ./
+          tar -C ./target/bundled/ -cf disturb-${{ matrix.os }}-${{ github.ref_name }}.tar .
       - name: Get release
         id: get_release
         uses: bruceadams/get-release@v1.3.2
