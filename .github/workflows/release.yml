@@ -17,9 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     permissions:
-      actions: read
-      issues: read
-      packages: write
+      contents: write
+      pull-requests: write
+      repository-projects: write
 
     steps:
       - uses: actions/checkout@v4
