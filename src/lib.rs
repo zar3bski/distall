@@ -174,7 +174,7 @@ impl Plugin for DistUrb {
             for channel_index in 0..channels {
                 match oversampler_type {
                     Oversampler::None => {
-                        soft_clipping(pre_gain, post_gain, block.get_mut(channel_index).unwrap())
+                        soft_clipping(pre_gain, post_gain, block.get_mut(channel_index).unwrap());
                     }
                     Oversampler::NaiveOversampler => {
                         match channel_index {

@@ -21,3 +21,21 @@ After installing [Rust](https://rustup.rs/), you can compile DistUrb as follows:
 ```shell
 cargo xtask bundle dist-urb --release
 ```
+
+## Features
+
+### Oversampling
+
+To reduce the aliasing produced by the distortion, the following oversampling methods may be applied. All the spectral graphs displayed bellow are produced from a sin signal of 523,251 Hz (C4) using the **soft_clipping** distortion.
+
+#### None
+
+This is the raw sound. Use it mainly to produce aggressive old-school/industrial sounds 
+
+![](docs/imgs/soft_clip_no_oversampling.png)
+
+#### NaiveOversampler
+
+x2 oversampling using a serie of Biquad based **low pass filters** before and after the distortion function.
+
+![](docs/imgs/soft_clip_naive_oversampling.png)
