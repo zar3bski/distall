@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    strategy:
+      matrix: 
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        #arch : ["amd64", "aarch64"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Edit Cargo.toml to reflect the tag
+        run: sed -i -E 's/^version = "[0-9]+.[0-9]+.[0-9]+*"/version = "${{ github.ref_name }}"/' Cargo.toml
+      - name: Build
+        run: |
+          cargo xtask bundle dist-urb --release
+      - name: Bundle artifacts in an archive
+        run: |
+          cd target/bundled
+          tar -cf ../../disturb-${{ matrix.os }}-${{ github.ref_name }}.tar ./
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload release binary
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: ./target/release/dist-urb
+          asset_name: disturb-${{ matrix.os }}-${{ github.ref_name }}.tar 
+          asset_content_type: application/x-tar
