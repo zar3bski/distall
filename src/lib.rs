@@ -94,7 +94,7 @@ impl Default for DistUrbParams {
 }
 
 impl Plugin for DistUrb {
-    const NAME: &'static str = "Dist Urb";
+    const NAME: &'static str = "DistAll";
     const VENDOR: &'static str = "David Zarebski";
     const URL: &'static str = env!("CARGO_PKG_HOMEPAGE");
     const EMAIL: &'static str = "zarebskidavid@gmail.com";
@@ -202,7 +202,7 @@ impl Plugin for DistUrb {
 }
 
 impl ClapPlugin for DistUrb {
-    const CLAP_ID: &'static str = "com.zar3bski.DistUrb";
+    const CLAP_ID: &'static str = "com.zar3bski.DistAll";
     const CLAP_DESCRIPTION: Option<&'static str> = Some("General purpose distortion");
     const CLAP_MANUAL_URL: Option<&'static str> = Some(Self::URL);
     const CLAP_SUPPORT_URL: Option<&'static str> = None;

@@ -1,10 +1,10 @@
-# dist-urb
+# DistAll
 
 General purpose CLAP and VST3 distortion
 
 ## Current status and roadmap
 
-`dist-urb` currently only implements a **Soft clipping** distortion with no filter as a POC, testing the [nih-plug](https://github.com/robbert-vdh/nih-plug/tree/master) it is based on. Future developments include
+`Distall` currently only implements a **Soft clipping** distortion with no filter as a POC, testing the [nih-plug](https://github.com/robbert-vdh/nih-plug/tree/master) it is based on. Future developments include
 
 * low pass filter
 * DRY / WET signal separation
@@ -19,7 +19,7 @@ General purpose CLAP and VST3 distortion
 After installing [Rust](https://rustup.rs/), you can compile DistUrb as follows:
 
 ```shell
-cargo xtask bundle dist-urb --release
+cargo xtask bundle distall --release
 ```
 
 ## Features
