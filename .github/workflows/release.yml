@@ -101,10 +101,8 @@ jobs:
         uses: lexbritvin/os-info-action@v1
         id: info
       - name: Build
-        env: 
-          ACTIONS_RUNNER_HOOK_JOB_STARTED: source $HOME/.bashrc
         run: |
-          cargo xtask bundle dist-urb --release
+          $HOME/.cargo/bin/cargo xtask bundle dist-urb --release
       - name: Bundle artifacts in an archive
         run: |
           tar -C ./target/bundled/ -cf disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-${{ steps.info.outputs.architecture }}.tar .
