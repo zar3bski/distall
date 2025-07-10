@@ -25,19 +25,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Edit Cargo.toml to reflect the tag
         run: sed -i -E 's/^version = "[0-9]+.[0-9]+.[0-9]+*"/version = "${{ github.ref_name }}"/' Cargo.toml
-      - name: extract distro name
-        env:
-          DISTRO: ${{ matrix.os }}
-        id: dist
-        run: |
-          INSTANCE_NAME="${DISTRO%-latest}"
-          echo "name=${INSTANCE_NAME/#ubuntu/linux}" >> $GITHUB_OUTPUT
+      - name: Collect System Info
+        uses: lexbritvin/os-info-action@v1
+        id: info
       - name: Build
         run: |
           cargo xtask bundle dist-urb --release
       - name: Bundle artifacts in an archive
         run: |
-          tar -C ./target/bundled/ -cf disturb-${{ github.ref_name }}-${{ steps.dist.outputs.name }}.tar .
+          tar -C ./target/bundled/ -cf disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-${{ steps.info.outputs.architecture }}.tar .
       - name: Get release
         id: get_release
         uses: bruceadams/get-release@v1.3.2
@@ -49,6 +45,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ./disturb-${{ github.ref_name }}-${{ steps.dist.outputs.name }}.tar
-          asset_name: disturb-${{ github.ref_name }}-${{ steps.dist.outputs.name }}.tar 
+          asset_path: ./disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-${{ steps.info.outputs.architecture }}.tar
+          asset_name: disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-${{ steps.info.outputs.architecture }}.tar 
           asset_content_type: application/octet-stream
