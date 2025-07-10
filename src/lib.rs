@@ -14,13 +14,13 @@ use crate::{
 // https://github.com/robbert-vdh/nih-plug/blob/master/plugins/examples/gain/src/lib.rs to get
 // started
 
-struct DistUrb {
-    params: Arc<DistUrbParams>,
+struct DistAll {
+    params: Arc<DistAllParams>,
     naive_oversamplers: Vec<NaiveOversampler>,
 }
 
 #[derive(Params)]
-struct DistUrbParams {
+struct DistAllParams {
     /// The parameter's ID is used to identify the parameter in the wrappred plugin API. As long as
     /// these IDs remain constant, you can rename and reorder these fields as you wish. The
     /// parameters are exposed to the host in the same order they were defined. In this case, this
@@ -33,16 +33,16 @@ struct DistUrbParams {
     pub oversampler: EnumParam<Oversampler>,
 }
 
-impl Default for DistUrb {
+impl Default for DistAll {
     fn default() -> Self {
         Self {
-            params: Arc::new(DistUrbParams::default()),
+            params: Arc::new(DistAllParams::default()),
             naive_oversamplers: vec![],
         }
     }
 }
 
-impl Default for DistUrbParams {
+impl Default for DistAllParams {
     fn default() -> Self {
         Self {
             // This gain is stored as linear gain. NIH-plug comes with useful conversion functions
@@ -93,7 +93,7 @@ impl Default for DistUrbParams {
     }
 }
 
-impl Plugin for DistUrb {
+impl Plugin for DistAll {
     const NAME: &'static str = "DistAll";
     const VENDOR: &'static str = "David Zarebski";
     const URL: &'static str = env!("CARGO_PKG_HOMEPAGE");
@@ -201,7 +201,7 @@ impl Plugin for DistUrb {
     }
 }
 
-impl ClapPlugin for DistUrb {
+impl ClapPlugin for DistAll {
     const CLAP_ID: &'static str = "com.zar3bski.DistAll";
     const CLAP_DESCRIPTION: Option<&'static str> = Some("General purpose distortion");
     const CLAP_MANUAL_URL: Option<&'static str> = Some(Self::URL);
@@ -215,7 +215,7 @@ impl ClapPlugin for DistUrb {
     ];
 }
 
-impl Vst3Plugin for DistUrb {
+impl Vst3Plugin for DistAll {
     const VST3_CLASS_ID: [u8; 16] = *b"Exactly16Chars!!";
 
     // And also don't forget to change these categories
@@ -226,5 +226,5 @@ impl Vst3Plugin for DistUrb {
     ];
 }
 
-nih_export_clap!(DistUrb);
-nih_export_vst3!(DistUrb);
+nih_export_clap!(DistAll);
+nih_export_vst3!(DistAll);

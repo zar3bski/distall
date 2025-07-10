@@ -16,7 +16,7 @@ General purpose CLAP and VST3 distortion
 
 ## Building
 
-After installing [Rust](https://rustup.rs/), you can compile DistUrb as follows:
+After installing [Rust](https://rustup.rs/), you can compile DistAll as follows:
 
 ```shell
 cargo xtask bundle distall --release
