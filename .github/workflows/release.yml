@@ -86,7 +86,7 @@ jobs:
           asset_content_type: application/octet-stream
 
   release_arm64_linux:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, ARM64]
 
     permissions:
       contents: write
@@ -100,18 +100,12 @@ jobs:
       - name: Collect System Info
         uses: lexbritvin/os-info-action@v1
         id: info
-      - name: QEMU install
-        uses: docker/setup-qemu-action@v3
-        with:  
-          plateforms: linux/arm64
-      - name: test qemu-aarch64
-        run: qemu-aarch64 --help
       - name: Build
         run: |
           cargo xtask bundle dist-urb --release
       - name: Bundle artifacts in an archive
         run: |
-          tar -C ./target/bundled/ -cf disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-arm64.tar .
+          tar -C ./target/bundled/ -cf disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-${{ steps.info.outputs.architecture }}.tar .
       - name: Get release
         id: get_release
         uses: bruceadams/get-release@v1.3.2
@@ -123,6 +117,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ./disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-arm64.tar
-          asset_name: disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-arm64.tar 
+          asset_path: ./disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-${{ steps.info.outputs.architecture }}.tar
+          asset_name: disturb-${{ github.ref_name }}-${{ steps.info.outputs.os-name }}-${{ steps.info.outputs.architecture }}.tar 
           asset_content_type: application/octet-stream
