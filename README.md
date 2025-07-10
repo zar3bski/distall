@@ -22,6 +22,15 @@ After installing [Rust](https://rustup.rs/), you can compile DistAll as follows:
 cargo xtask bundle distall --release
 ```
 
+## Install precompiled plugings
+
+Select the .tar archive of the version you want to install [in the release section](https://github.com/zar3bski/distall/releases) for your Operating System and your architecture. You can find the following compiled plugins
+
+|      |Windows|macOS|Linux |
+| ----:|:-----:|:---:|:----:|
+|amd64 |  X    |  X  |  X   |
+|arm64 |       |  X  |  X   |
+
 ## Features
 
 ### Oversampling
