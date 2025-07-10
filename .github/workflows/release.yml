@@ -31,7 +31,7 @@ jobs:
         id: dist
         run: echo "name=${DISTRO%-latest}" >> $GITHUB_OUTPUT
       - name: display distro
-        run: echo ${{ steps.split.outputs.name }}
+        run: echo ${{ steps.dist.outputs.name }}
       - name: Build
         run: |
           cargo xtask bundle dist-urb --release
