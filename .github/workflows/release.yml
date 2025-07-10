@@ -25,10 +25,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Edit Cargo.toml to reflect the tag
         run: sed -i -E 's/^version = "[0-9]+.[0-9]+.[0-9]+*"/version = "${{ github.ref_name }}"/' Cargo.toml
-      - name: Get canonical OS name
-        run: OS=$(echo $os | awk -F"-" '{split($0,a); print a[1]}')
-      - name: REMOVE ME see OS
-        run: echo $OS
+      - name: extract distro name
+        env:
+          DISTRO: ${{ matrix.os }}
+        id: dist
+        run: echo "name=${DISTRO%-latest}" >> $GITHUB_OUTPUT
+      - name: display distro
+        run: echo ${{ steps.split.outputs.name }}
       - name: Build
         run: |
           cargo xtask bundle dist-urb --release
