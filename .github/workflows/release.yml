@@ -32,14 +32,12 @@ jobs:
         run: |
           INSTANCE_NAME="${DISTRO%-latest}"
           echo "name=${INSTANCE_NAME/#ubuntu/linux}" >> $GITHUB_OUTPUT
-      - name: display distro
-        run: echo ${{ steps.dist.outputs.name }}
       - name: Build
         run: |
           cargo xtask bundle dist-urb --release
       - name: Bundle artifacts in an archive
         run: |
-          tar -C ./target/bundled/ -cf disturb-${{ steps.dist.outputs.name }}-${{ github.ref_name }}.tar .
+          tar -C ./target/bundled/ -cf disturb-${{ github.ref_name }}-${{ steps.dist.outputs.name }}.tar .
       - name: Get release
         id: get_release
         uses: bruceadams/get-release@v1.3.2
@@ -51,6 +49,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ./disturb-${{ steps.dist.outputs.name }}-${{ github.ref_name }}.tar
-          asset_name: disturb-${{ steps.dist.outputs.name }}-${{ github.ref_name }}.tar 
+          asset_path: ./disturb-${{ github.ref_name }}-${{ steps.dist.outputs.name }}.tar
+          asset_name: disturb-${{ github.ref_name }}-${{ steps.dist.outputs.name }}.tar 
           asset_content_type: application/octet-stream
