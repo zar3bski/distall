@@ -6,7 +6,7 @@ use nih_plug::prelude::*;
 use std::sync::Arc;
 
 use crate::{
-    distortions::soft_clipping,
+    distortions::DistortionType,
     oversamplers::{NaiveOversampler, Oversampler, Oversampling, BLOCK_SIZE},
 };
 
@@ -31,6 +31,8 @@ struct DistAllParams {
     pub post_gain: FloatParam,
     #[id = "oversampler"]
     pub oversampler: EnumParam<Oversampler>,
+    #[id = "distortion"]
+    pub distortion: EnumParam<DistortionType>,
 }
 
 impl Default for DistAll {
@@ -89,6 +91,7 @@ impl Default for DistAllParams {
             .with_value_to_string(formatters::v2s_f32_gain_to_db(2))
             .with_string_to_value(formatters::s2v_f32_gain_to_db()),
             oversampler: EnumParam::new("Oversampler", Oversampler::None),
+            distortion: EnumParam::new("Distortion", DistortionType::SOFT),
         }
     }
 }
@@ -169,24 +172,25 @@ impl Plugin for DistAll {
             let pre_gain: f32 = self.params.pre_gain.smoothed.next();
             let post_gain: f32 = self.params.post_gain.smoothed.next();
             let oversampler_type = self.params.oversampler.value();
+            let distortion_type = self.params.distortion.value().function();
             let channels = block.channels();
 
             for channel_index in 0..channels {
                 match oversampler_type {
                     Oversampler::None => {
-                        soft_clipping(pre_gain, post_gain, block.get_mut(channel_index).unwrap());
+                        distortion_type(pre_gain, post_gain, block.get_mut(channel_index).unwrap());
                     }
                     Oversampler::NaiveOversampler => {
                         match channel_index {
                             0 => self.naive_oversamplers[0].process(
                                 block.get_mut(channel_index).unwrap(),
-                                soft_clipping,
+                                distortion_type,
                                 pre_gain,
                                 post_gain,
                             ),
                             1 => self.naive_oversamplers[1].process(
                                 block.get_mut(channel_index).unwrap(),
-                                soft_clipping,
+                                distortion_type,
                                 pre_gain,
                                 post_gain,
                             ),
