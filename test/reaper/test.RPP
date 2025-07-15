@@ -1,4 +1,4 @@
-<REAPER_PROJECT 0.1 "7.41/linux-x86_64" 1752565370
+<REAPER_PROJECT 0.1 "7.41/linux-x86_64" 1752578212
   <NOTES 0 2
   >
   RIPPLE 0 0
@@ -41,6 +41,7 @@
   RENDER_ADDTOPROJ 0
   RENDER_STEMS 0
   RENDER_DITHER 0
+  RENDER_TRIM 0 0 0 0
   TIMELOCKMODE 1
   TEMPOENVLOCKMODE 1
   ITEMMIX 1
@@ -147,8 +148,8 @@
     MIDIOUT -1
     MAINSEND 1 0
     <FXCHAIN
-      WNDRECT 48 79 1229 187
-      SHOW 0
+      WNDRECT 48 96 734 351
+      SHOW 2
       LASTSEL 1
       DOCKED 0
       BYPASS 0 0 0
@@ -162,10 +163,11 @@
       WAK 0 0
       BYPASS 0 0 0
       <CLAP "CLAP: DistAll (David Zarebski)" com.zar3bski.DistAll ""
-        CFG 0 0 0 ""
+        CFG 0 200 150 ""
         <STATE
-          kAAAAAAAAAB7InZlcnNpb24iOiIwLjEuMCIsInBhcmFtcyI6eyJkaXN0b3J0aW9uIjp7ImkzMiI6MH0sIm92ZXJzYW1wbGVyIjp7ImkzMiI6MH0sInBvc3RfZ2FpbiI6
-          eyJmMzIiOjAuMjUxMTg4NjR9LCJwcmVfZ2FpbiI6eyJmMzIiOjEwLjB9fSwiZmllbGRzIjp7fX0=
+          ugAAAAAAAAB7InZlcnNpb24iOiIwLjEuMCIsInBhcmFtcyI6eyJkaXN0b3J0aW9uIjp7ImkzMiI6MH0sIm92ZXJzYW1wbGVyIjp7ImkzMiI6MH0sInBvc3RfZ2FpbiI6
+          eyJmMzIiOjAuMjUxMTg4NjR9LCJwcmVfZ2FpbiI6eyJmMzIiOjAuNTYzNDc0Nn19LCJmaWVsZHMiOnsiZWRpdG9yLXN0YXRlIjoie1wic2l6ZVwiOlsyMDAsMTUwXX0i
+          fX0=
         >
       >
       FLOATPOS 0 0 0 0

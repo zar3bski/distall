@@ -1,8 +1,10 @@
 mod distortions;
+mod editor;
 mod filters;
 mod oversamplers;
 
 use nih_plug::prelude::*;
+use nih_plug_iced::IcedState;
 use std::sync::Arc;
 
 use crate::{
@@ -25,6 +27,8 @@ struct DistAllParams {
     /// these IDs remain constant, you can rename and reorder these fields as you wish. The
     /// parameters are exposed to the host in the same order they were defined. In this case, this
     /// gain parameter is stored as linear gain while the values are displayed in decibels.
+    #[persist = "editor-state"]
+    editor_state: Arc<IcedState>,
     #[id = "pre_gain"]
     pub pre_gain: FloatParam,
     #[id = "post_gain"]
@@ -50,6 +54,7 @@ impl Default for DistAllParams {
             // This gain is stored as linear gain. NIH-plug comes with useful conversion functions
             // to treat these kinds of parameters as if we were dealing with decibels. Storing this
             // as decibels is easier to work with, but requires a conversion for every sample.
+            editor_state: editor::gui::default_state(),
             pre_gain: FloatParam::new(
                 "Pre Gain",
                 util::db_to_gain(20.0),
@@ -135,6 +140,10 @@ impl Plugin for DistAll {
 
     fn params(&self) -> Arc<dyn Params> {
         self.params.clone()
+    }
+
+    fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
+        editor::gui::create(self.params.clone(), self.params.editor_state.clone())
     }
 
     fn initialize(
