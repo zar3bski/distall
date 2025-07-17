@@ -5,6 +5,8 @@ use nih_plug::util::window;
 use nih_plug_iced::widgets as nih_widgets;
 use nih_plug_iced::*;
 
+use crate::editor::components::slider_factory;
+use crate::editor::style::Theme;
 use crate::DistAllParams;
 
 pub(crate) fn default_state() -> Arc<IcedState> {
@@ -70,24 +72,16 @@ impl IcedEditor for DistallEditor {
     fn view(&mut self) -> Element<'_, Self::Message> {
         Container::new(
             Row::new()
-                .push(
-                    Column::new().push(Text::new("Pre-gain")).push(
-                        nih_widgets::ParamSlider::new(
-                            &mut self.pre_gain_slider_state,
-                            &self.params.pre_gain,
-                        )
-                        .map(Message::ParamUpdate),
-                    ),
-                )
-                .push(
-                    Column::new().push(Text::new("Post-gain")).push(
-                        nih_widgets::ParamSlider::new(
-                            &mut self.post_gain_slider_state,
-                            &self.params.post_gain,
-                        )
-                        .map(Message::ParamUpdate),
-                    ),
-                ),
+                .push(slider_factory(
+                    &self.params.pre_gain,
+                    &mut self.pre_gain_slider_state,
+                    "Pre-gain",
+                ))
+                .push(slider_factory(
+                    &self.params.post_gain,
+                    &mut self.post_gain_slider_state,
+                    "Post-gain",
+                )),
         )
         .width(Length::Fill)
         .into()

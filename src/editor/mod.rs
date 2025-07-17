@@ -1,2 +1,3 @@
-//mod components;
+mod components;
 pub mod gui;
+mod style;
