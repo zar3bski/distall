@@ -23,8 +23,8 @@ label.count {
     width: 50px;
     height: 32px;
 }
-
-label{
-    font-size: 60px; ;
+/*FIXME*/
+label.text{
+    font-size: large;
 }
 
