@@ -4,7 +4,7 @@ mod filters;
 mod oversamplers;
 
 use nih_plug::prelude::*;
-use nih_plug_iced::IcedState;
+use nih_plug_vizia::ViziaState;
 use std::sync::Arc;
 
 use crate::{
@@ -16,9 +16,14 @@ use crate::{
 // https://github.com/robbert-vdh/nih-plug/blob/master/plugins/examples/gain/src/lib.rs to get
 // started
 
+/// The time it takes for the peak meter to decay by 12 dB after switching to complete silence.
+const PEAK_METER_DECAY_MS: f64 = 150.0;
+
 struct DistAll {
     params: Arc<DistAllParams>,
     naive_oversamplers: Vec<NaiveOversampler>,
+    peak_meter: Arc<AtomicF32>,
+    peak_meter_decay_weight: f32,
 }
 
 #[derive(Params)]
@@ -28,7 +33,7 @@ struct DistAllParams {
     /// parameters are exposed to the host in the same order they were defined. In this case, this
     /// gain parameter is stored as linear gain while the values are displayed in decibels.
     #[persist = "editor-state"]
-    editor_state: Arc<IcedState>,
+    editor_state: Arc<ViziaState>,
     #[id = "pre_gain"]
     pub pre_gain: FloatParam,
     #[id = "post_gain"]
@@ -44,6 +49,8 @@ impl Default for DistAll {
         Self {
             params: Arc::new(DistAllParams::default()),
             naive_oversamplers: vec![],
+            peak_meter: Arc::new(AtomicF32::new(util::MINUS_INFINITY_DB)),
+            peak_meter_decay_weight: 1.0,
         }
     }
 }
@@ -54,7 +61,7 @@ impl Default for DistAllParams {
             // This gain is stored as linear gain. NIH-plug comes with useful conversion functions
             // to treat these kinds of parameters as if we were dealing with decibels. Storing this
             // as decibels is easier to work with, but requires a conversion for every sample.
-            editor_state: editor::gui::default_state(),
+            editor_state: editor::default_state(),
             pre_gain: FloatParam::new(
                 "Pre Gain",
                 util::db_to_gain(20.0),
@@ -143,7 +150,11 @@ impl Plugin for DistAll {
     }
 
     fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
-        editor::gui::create(self.params.clone(), self.params.editor_state.clone())
+        editor::create(
+            self.params.clone(),
+            self.peak_meter.clone(),
+            self.params.editor_state.clone(),
+        )
     }
 
     fn initialize(
@@ -155,6 +166,10 @@ impl Plugin for DistAll {
         // Resize buffers and perform other potentially expensive initialization operations here.
         // The `reset()` function is always called right after this function. You can remove this
         // function if you do not need it.
+        self.peak_meter_decay_weight = 0.25f64
+            .powf((_buffer_config.sample_rate as f64 * PEAK_METER_DECAY_MS / 1000.0).recip())
+            as f32;
+
         self.naive_oversamplers
             .push(NaiveOversampler::new(_buffer_config.sample_rate));
         self.naive_oversamplers
@@ -176,10 +191,37 @@ impl Plugin for DistAll {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
+        // Input gain calculator TO MOVE IN A THREAD
+        for channel_samples in buffer.iter_samples() {
+            let mut amplitude = 0.0;
+            let num_samples = channel_samples.len();
+
+            for sample in channel_samples {
+                amplitude += *sample;
+            }
+
+            // To save resources, a plugin can (and probably should!) only perform expensive
+            // calculations that are only displayed on the GUI while the GUI is open
+            if self.params.editor_state.is_open() {
+                amplitude = (amplitude / num_samples as f32).abs();
+                let current_peak_meter = self.peak_meter.load(std::sync::atomic::Ordering::Relaxed);
+                let new_peak_meter = if amplitude > current_peak_meter {
+                    amplitude
+                } else {
+                    current_peak_meter * self.peak_meter_decay_weight
+                        + amplitude * (1.0 - self.peak_meter_decay_weight)
+                };
+
+                self.peak_meter
+                    .store(new_peak_meter, std::sync::atomic::Ordering::Relaxed)
+            }
+        }
+
         for (_, mut block) in buffer.iter_blocks(BLOCK_SIZE) {
             // Smoothing is optionally built into the parameters themselves
             let pre_gain: f32 = self.params.pre_gain.smoothed.next();
             let post_gain: f32 = self.params.post_gain.smoothed.next();
+
             let oversampler_type = self.params.oversampler.value();
             let distortion_type = self.params.distortion.value().function();
             let channels = block.channels();
