@@ -3,18 +3,6 @@
     gap: 20px;
 }
 
-button {
-    border-width: 0px;
-}
-
-button.dec {
-    background-color: rgb(170, 50, 50);
-}
-
-button.inc {
-    background-color: rgb(50, 170, 50);
-}
-
 label.count {
     alignment: center;
     border-width: 1px;
@@ -24,7 +12,13 @@ label.count {
     height: 32px;
 }
 /*FIXME*/
-label.text{
+label{
     font-size: large;
+    background-color: rgb(170, 50, 50);
 }
 
+/*FIXME*/
+slider{
+    font-size: large;
+    background-color: rgb(170, 50, 50);
+}
