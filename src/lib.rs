@@ -1,14 +1,14 @@
 mod distortions;
-mod editor;
 mod filters;
+mod gui;
 mod oversamplers;
 
 use nih_plug::prelude::*;
-use nih_plug_vizia::ViziaState;
 use std::sync::Arc;
 
 use crate::{
     distortions::DistortionType,
+    gui::{editor::ViziaEditor, state::ViziaState},
     oversamplers::{NaiveOversampler, Oversampler, Oversampling, BLOCK_SIZE},
 };
 
@@ -61,7 +61,7 @@ impl Default for DistAllParams {
             // This gain is stored as linear gain. NIH-plug comes with useful conversion functions
             // to treat these kinds of parameters as if we were dealing with decibels. Storing this
             // as decibels is easier to work with, but requires a conversion for every sample.
-            editor_state: editor::default_state(),
+            editor_state: gui::default_state(),
             pre_gain: FloatParam::new(
                 "Pre Gain",
                 util::db_to_gain(20.0),
@@ -211,7 +211,6 @@ impl Plugin for DistAll {
                     current_peak_meter * self.peak_meter_decay_weight
                         + amplitude * (1.0 - self.peak_meter_decay_weight)
                 };
-
                 self.peak_meter
                     .store(new_peak_meter, std::sync::atomic::Ordering::Relaxed)
             }
