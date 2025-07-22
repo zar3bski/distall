@@ -11,14 +11,14 @@ label.count {
     width: 50px;
     height: 32px;
 }
-/*FIXME*/
+/*FIXME
 label{
     font-size: large;
     background-color: rgb(170, 50, 50);
 }
 
-/*FIXME*/
+
 slider{
     font-size: large;
     background-color: rgb(170, 50, 50);
-}
+}*/
