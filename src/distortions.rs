@@ -1,11 +1,18 @@
 use nih_plug::params::enums::Enum;
+use std::fmt::{self, Display};
 
 pub type Distortion = fn(f32, f32, &mut [f32]);
 
-#[derive(Enum, Debug, PartialEq)]
+#[derive(Enum, Debug, PartialEq, Clone, Copy)]
 pub enum DistortionType {
     SOFT,
     HARD,
+}
+
+impl fmt::Display for DistortionType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 impl DistortionType {

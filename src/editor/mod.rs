@@ -1,5 +1,5 @@
 use atomic_float::AtomicF32;
-use nih_plug::params::{Param, Params};
+use nih_plug::params::{EnumParam, Param, Params};
 use nih_plug::prelude::{util, Editor, GuiContext, ParamSetter};
 use nih_plug_vizia::vizia::context::EventContext;
 use nih_plug_vizia::vizia::prelude::*;
@@ -7,7 +7,7 @@ use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::widgets::{ParamEvent, ParamSlider, ParamSliderExt, PeakMeter, ResizeHandle};
 use nih_plug_vizia::{assets, create_vizia_editor, ViziaState, ViziaTheming};
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 
 use crate::distortions::DistortionType;
@@ -16,6 +16,7 @@ use crate::DistAllParams;
 #[derive(Lens)]
 struct Data {
     params: Arc<DistAllParams>,
+    active_distortion: Arc<DistortionType>,
     peak_meter: Arc<AtomicF32>,
 }
 
@@ -44,6 +45,9 @@ impl Model for Data {
                 cx.emit(ParamEvent::EndSetParameter(param).upcast());
             }
         });
+
+        // Update view field after change
+        self.active_distortion = self.params.distortion.value().into();
     }
 }
 
@@ -63,6 +67,7 @@ pub(crate) fn create(
 
         Data {
             params: params.clone(),
+            active_distortion: Arc::new(params.distortion.value()),
             peak_meter: peak_meter.clone(),
         }
         .build(cx);
@@ -97,8 +102,10 @@ pub(crate) fn create(
                         |ex| ex.emit(AppEvent::Decrement),
                         |cx| Label::new(cx, "<<"),
                     );
-                    Label::new(cx, &Data::params.get(cx).distortion.to_string()); //FIXME: MAJ
-                                                                                  //Label::new(cx, &Data::params.get_val(cx).distortion.to_string());
+                    Binding::new(cx, Data::active_distortion, |cx, params| {
+                        let value = *params.get(cx);
+                        Label::new(cx, &value.to_string());
+                    });
                     Button::new(
                         cx,
                         |ex| ex.emit(AppEvent::Increment),
