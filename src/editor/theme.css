@@ -11,6 +11,11 @@ label.count {
     width: 50px;
     height: 32px;
 }
+
+.gain-slider {
+    background-color: rgb(170, 50, 50);
+}
+
 /*FIXME
 label{
     font-size: large;

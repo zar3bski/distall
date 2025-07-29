@@ -1,55 +1,24 @@
 use atomic_float::AtomicF32;
-use nih_plug::params::{EnumParam, Param, Params};
-use nih_plug::prelude::{util, Editor, GuiContext, ParamSetter};
-use nih_plug_vizia::vizia::context::EventContext;
+use nih_plug::prelude::{util, Editor};
 use nih_plug_vizia::vizia::prelude::*;
 
-use nih_plug_vizia::widgets::{ParamEvent, ParamSlider, ParamSliderExt, PeakMeter, ResizeHandle};
+use nih_plug_vizia::widgets::{ParamSlider, PeakMeter, ResizeHandle};
 use nih_plug_vizia::{assets, create_vizia_editor, ViziaState, ViziaTheming};
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::distortions::DistortionType;
+use crate::editor::widgets::categorical_picker::CategoricalPicker;
 use crate::DistAllParams;
+mod widgets;
 
 #[derive(Lens)]
 struct Data {
     params: Arc<DistAllParams>,
-    active_distortion: Arc<DistortionType>,
     peak_meter: Arc<AtomicF32>,
 }
 
-pub enum AppEvent {
-    Increment,
-    Decrement,
-}
-
-impl Model for Data {
-    fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
-        let param = &self.params.distortion;
-        event.map(|app_event, meta| match app_event {
-            AppEvent::Decrement => {
-                cx.emit(ParamEvent::BeginSetParameter(param).upcast());
-                cx.emit(
-                    ParamEvent::SetParameter(param, param.previous_step(param.value(), false))
-                        .upcast(),
-                );
-                cx.emit(ParamEvent::EndSetParameter(param).upcast());
-            }
-            AppEvent::Increment => {
-                cx.emit(ParamEvent::BeginSetParameter(param).upcast());
-                cx.emit(
-                    ParamEvent::SetParameter(param, param.next_step(param.value(), false)).upcast(),
-                );
-                cx.emit(ParamEvent::EndSetParameter(param).upcast());
-            }
-        });
-
-        // Update view field after change
-        self.active_distortion = self.params.distortion.value().into();
-    }
-}
+impl Model for Data {}
 
 // Makes sense to also define this here, makes it a bit easier to keep track of
 pub(crate) fn default_state() -> Arc<ViziaState> {
@@ -67,7 +36,6 @@ pub(crate) fn create(
 
         Data {
             params: params.clone(),
-            active_distortion: Arc::new(params.distortion.value()),
             peak_meter: peak_meter.clone(),
         }
         .build(cx);
@@ -79,7 +47,7 @@ pub(crate) fn create(
             VStack::new(cx, |cx| {
                 Label::new(cx, "Pre-Gain");
 
-                ParamSlider::new(cx, Data::params, |params| &params.pre_gain);
+                ParamSlider::new(cx, Data::params, |params| &params.pre_gain).class("gain-slider");
 
                 PeakMeter::new(
                     cx,
@@ -96,32 +64,25 @@ pub(crate) fn create(
 
             VStack::new(cx, |cx: &mut Context| {
                 Label::new(cx, "Distortion");
-                HStack::new(cx, |cx: &mut Context| {
-                    Button::new(
-                        cx,
-                        |ex| ex.emit(AppEvent::Decrement),
-                        |cx| Label::new(cx, "<<"),
-                    );
-                    Binding::new(cx, Data::active_distortion, |cx, params| {
-                        let value = *params.get(cx);
-                        Label::new(cx, &value.to_string());
-                    });
-                    Button::new(
-                        cx,
-                        |ex| ex.emit(AppEvent::Increment),
-                        |cx| Label::new(cx, ">>"),
-                    );
-                });
+                CategoricalPicker::new(cx, Data::params, |params| &params.distortion);
             });
             VStack::new(cx, |cx| {
                 Label::new(cx, "Post-Gain");
-
-                ParamSlider::new(cx, Data::params, |params| &params.post_gain);
+                ParamSlider::new(cx, Data::params, |params| &params.post_gain).class("gain-slider");
             })
             .row_between(Pixels(0.0))
             .child_left(Stretch(1.0))
             .child_right(Stretch(1.0));
         });
+        HStack::new(cx, |cx| {
+            VStack::new(cx, |cx: &mut Context| {}); // TODO: fill or something
+            VStack::new(cx, |cx: &mut Context| {
+                Label::new(cx, "Oversampling");
+                CategoricalPicker::new(cx, Data::params, |params| &params.oversampler);
+            });
+            VStack::new(cx, |cx: &mut Context| {}); // TODO: fill or something
+        });
+
         ResizeHandle::new(cx);
     })
 }
