@@ -16,6 +16,12 @@ label.count {
     background-color: rgb(170, 50, 50);
 }
 
+.category {
+    background-color: rgb(18, 8, 8);
+    color:  rgb(25, 239, 64);;
+}
+
+
 /*FIXME
 label{
     font-size: large;

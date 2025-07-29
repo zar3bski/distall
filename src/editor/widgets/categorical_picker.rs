@@ -1,3 +1,5 @@
+use std::fmt::Alignment;
+
 use nih_plug::params::Param;
 use nih_plug_vizia::vizia::prelude::*;
 use nih_plug_vizia::vizia::{binding::Lens, view::View};
@@ -54,7 +56,6 @@ impl CategoricalPicker {
     }
 
     fn button_view(cx: &mut Context, event: CategoryEvent, text: &str) {
-        //Button::new(cx, cx.emit(event), |cx| Label::new(cx, text));
         Button::new(
             cx,
             move |ex| ex.emit(event.clone()),
@@ -64,28 +65,31 @@ impl CategoricalPicker {
 
     fn text_input_view(cx: &mut Context, display_value_lens: impl Lens<Target = String>) {
         Textbox::new(cx, display_value_lens)
-            .class("categorie")
-            //TODO: complete
-            //.on_submit(|cx, string, success| {
-            //    if success {
-            //        cx.emit(ParamSliderEvent::TextInput(string))
-            //    } else {
-            //        cx.emit(ParamSliderEvent::CancelTextInput);
-            //    }
-            //})
-            //.on_cancel(|cx| {
-            //    cx.emit(ParamSliderEvent::CancelTextInput);
-            //})
-            //.on_build(|cx| {
-            //    cx.emit(TextEvent::StartEdit);
-            //    cx.emit(TextEvent::SelectAll);
-            //})
-            // `.child_space(Stretch(1.0))` no longer works
-            .class("align_center")
-            .child_top(Stretch(1.0))
-            .child_bottom(Stretch(1.0))
-            .height(Stretch(1.0))
-            .width(Stretch(1.0));
+            .class("category")
+            .width(Stretch(1.0))
+            .child_left(Stretch(1.0))
+            .child_right(Stretch(1.0));
+        //TODO: complete
+        //.on_submit(|cx, string, success| {
+        //    if success {
+        //        cx.emit(ParamSliderEvent::TextInput(string))
+        //    } else {
+        //        cx.emit(ParamSliderEvent::CancelTextInput);
+        //    }
+        //})
+        //.on_cancel(|cx| {
+        //    cx.emit(ParamSliderEvent::CancelTextInput);
+        //})
+        //.on_build(|cx| {
+        //    cx.emit(TextEvent::StartEdit);
+        //    cx.emit(TextEvent::SelectAll);
+        //})
+        // `.child_space(Stretch(1.0))` no longer works
+        //.class("align_center")
+        //.child_top(Stretch(1.0))
+        //.child_bottom(Stretch(1.0))
+        //.height(Stretch(1.0))
+        //.width(Stretch(1.0));
     }
 }
 
