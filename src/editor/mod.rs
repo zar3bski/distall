@@ -2,6 +2,7 @@ use atomic_float::AtomicF32;
 use nih_plug::prelude::{util, Editor};
 use nih_plug_vizia::vizia::prelude::*;
 
+use nih_plug_vizia::vizia::vg::Align;
 use nih_plug_vizia::widgets::{ParamSlider, PeakMeter, ResizeHandle};
 use nih_plug_vizia::{assets, create_vizia_editor, ViziaState, ViziaTheming};
 use std::sync::atomic::Ordering;
@@ -23,7 +24,7 @@ impl Model for Data {}
 
 // Makes sense to also define this here, makes it a bit easier to keep track of
 pub(crate) fn default_state() -> Arc<ViziaState> {
-    ViziaState::new(|| (600, 250))
+    ViziaState::new(|| (700, 250))
 }
 
 pub(crate) fn create(
@@ -48,53 +49,65 @@ pub(crate) fn create(
 
         HStack::new(cx, |cx| {
             VStack::new(cx, |cx| {
-                Label::new(cx, "Pre-Gain");
-
-                ParamSlider::new(cx, Data::params, |params| &params.pre_gain).class("gain-slider");
-
+                Label::new(cx, "IN Gain");
                 PeakMeter::new(
                     cx,
                     Data::peak_meter_pre.map(|peak_meter_pre| {
                         util::gain_to_db(peak_meter_pre.load(Ordering::Relaxed))
                     }),
                     Some(Duration::from_millis(600)),
-                )
-                // This is how adding padding works in vizia
-                .top(Pixels(10.0));
-            })
-            .row_between(Pixels(0.0))
-            .child_left(Stretch(1.0))
-            .child_right(Stretch(1.0));
-
-            VStack::new(cx, |cx: &mut Context| {
-                Label::new(cx, "Distortion");
-                CategoricalPicker::new(cx, Data::params, |params| &params.distortion);
+                );
             });
             VStack::new(cx, |cx| {
-                Label::new(cx, "Post-Gain");
-                ParamSlider::new(cx, Data::params, |params| &params.post_gain).class("gain-slider");
+                Label::new(cx, "OUT Gain");
                 PeakMeter::new(
                     cx,
                     Data::peak_meter_post.map(|peak_meter_post| {
                         util::gain_to_db(peak_meter_post.load(Ordering::Relaxed))
                     }),
                     Some(Duration::from_millis(600)),
-                )
-                // This is how adding padding works in vizia
-                .top(Pixels(10.0));
+                );
             })
-            .row_between(Pixels(0.0))
+            .child_left(Stretch(1.0));
+        })
+        .bottom(Pixels(0.0))
+        .top(Pixels(3.0))
+        .class("row");
+
+        HStack::new(cx, |cx| {
+            VStack::new(cx, |cx| {
+                Label::new(cx, "Pre-Gain");
+
+                ParamSlider::new(cx, Data::params, |params| &params.pre_gain).class("gain-slider");
+            })
             .child_left(Stretch(1.0))
-            .child_right(Stretch(1.0));
-        });
+            .child_right(Stretch(1.0))
+            .class("control-panel");
+
+            VStack::new(cx, |cx: &mut Context| {
+                Label::new(cx, "Distortion");
+                CategoricalPicker::new(cx, Data::params, |params| &params.distortion);
+            })
+            .class("control-panel");
+            VStack::new(cx, |cx| {
+                Label::new(cx, "Post-Gain");
+                ParamSlider::new(cx, Data::params, |params| &params.post_gain).class("gain-slider");
+            })
+            .child_left(Stretch(1.0))
+            .child_right(Stretch(1.0))
+            .class("control-panel");
+        })
+        .class("row");
         HStack::new(cx, |cx| {
             VStack::new(cx, |cx: &mut Context| {}); // TODO: fill or something
             VStack::new(cx, |cx: &mut Context| {
                 Label::new(cx, "Oversampling");
                 CategoricalPicker::new(cx, Data::params, |params| &params.oversampler);
-            });
+            })
+            .class("control-panel");
             VStack::new(cx, |cx: &mut Context| {}); // TODO: fill or something
-        });
+        })
+        .class("row");
 
         ResizeHandle::new(cx);
     })
