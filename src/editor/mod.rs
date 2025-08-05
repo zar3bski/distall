@@ -15,7 +15,8 @@ mod widgets;
 #[derive(Lens)]
 struct Data {
     params: Arc<DistAllParams>,
-    peak_meter: Arc<AtomicF32>,
+    peak_meter_pre: Arc<AtomicF32>,
+    peak_meter_post: Arc<AtomicF32>,
 }
 
 impl Model for Data {}
@@ -27,7 +28,8 @@ pub(crate) fn default_state() -> Arc<ViziaState> {
 
 pub(crate) fn create(
     params: Arc<DistAllParams>,
-    peak_meter: Arc<AtomicF32>,
+    peak_meter_pre: Arc<AtomicF32>,
+    peak_meter_post: Arc<AtomicF32>,
     editor_state: Arc<ViziaState>,
 ) -> Option<Box<dyn Editor>> {
     create_vizia_editor(editor_state, ViziaTheming::Custom, move |cx, _| {
@@ -36,7 +38,8 @@ pub(crate) fn create(
 
         Data {
             params: params.clone(),
-            peak_meter: peak_meter.clone(),
+            peak_meter_pre: peak_meter_pre.clone(),
+            peak_meter_post: peak_meter_post.clone(),
         }
         .build(cx);
 
@@ -51,8 +54,9 @@ pub(crate) fn create(
 
                 PeakMeter::new(
                     cx,
-                    Data::peak_meter
-                        .map(|peak_meter| util::gain_to_db(peak_meter.load(Ordering::Relaxed))),
+                    Data::peak_meter_pre.map(|peak_meter_pre| {
+                        util::gain_to_db(peak_meter_pre.load(Ordering::Relaxed))
+                    }),
                     Some(Duration::from_millis(600)),
                 )
                 // This is how adding padding works in vizia
@@ -69,6 +73,15 @@ pub(crate) fn create(
             VStack::new(cx, |cx| {
                 Label::new(cx, "Post-Gain");
                 ParamSlider::new(cx, Data::params, |params| &params.post_gain).class("gain-slider");
+                PeakMeter::new(
+                    cx,
+                    Data::peak_meter_post.map(|peak_meter_post| {
+                        util::gain_to_db(peak_meter_post.load(Ordering::Relaxed))
+                    }),
+                    Some(Duration::from_millis(600)),
+                )
+                // This is how adding padding works in vizia
+                .top(Pixels(10.0));
             })
             .row_between(Pixels(0.0))
             .child_left(Stretch(1.0))
