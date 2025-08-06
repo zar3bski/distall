@@ -1,0 +1,43 @@
+.row {
+    alignment: center;
+    background-color: #a51919;
+    color: #eeeeee;
+}
+
+
+.control-panel {
+    background-color: rgb(211, 216, 255);
+    color: #180202;
+    border-width: 2px;
+    border-style: dashed;
+    border-color: rgb(15, 37, 54);
+    border-radius: 10px;
+    left: 5px;
+    top: 5px;
+    right: 5px;
+    bottom: 5px;
+    padding-bottom: 15px;
+    padding-left: 15px;
+}
+
+.gain-slider {
+    background-color: #a51919;
+}
+
+.category {
+    background-color: rgb(18, 8, 8);
+    color:  rgb(184, 191, 254);
+}
+
+
+/*FIXME
+label{
+    font-size: large;
+    background-color: rgb(170, 50, 50);
+}
+
+
+slider{
+    font-size: large;
+    background-color: rgb(170, 50, 50);
+}*/
