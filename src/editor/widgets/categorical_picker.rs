@@ -67,30 +67,6 @@ impl CategoricalPicker {
 
     fn text_input_view(cx: &mut Context, display_value_lens: impl Lens<Target = String>) {
         Textbox::new(cx, display_value_lens).class("category");
-
-        //.child_left(Stretch(1.0))
-        //.child_right(Stretch(1.0));
-        //TODO: complete
-        //.on_submit(|cx, string, success| {
-        //    if success {
-        //        cx.emit(ParamSliderEvent::TextInput(string))
-        //    } else {
-        //        cx.emit(ParamSliderEvent::CancelTextInput);
-        //    }
-        //})
-        //.on_cancel(|cx| {
-        //    cx.emit(ParamSliderEvent::CancelTextInput);
-        //})
-        //.on_build(|cx| {
-        //    cx.emit(TextEvent::StartEdit);
-        //    cx.emit(TextEvent::SelectAll);
-        //})
-        // `.child_space(Stretch(1.0))` no longer works
-        //.class("align_center")
-        //.child_top(Stretch(1.0))
-        //.child_bottom(Stretch(1.0))
-        //.height(Stretch(1.0))
-        //.width(Stretch(1.0));
     }
 }
 

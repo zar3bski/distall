@@ -4,14 +4,14 @@ General purpose CLAP and VST3 distortion
 
 ## Current status and roadmap
 
-`Distall` currently only implements a **Soft clipping** distortion with no filter as a POC, testing the [nih-plug](https://github.com/robbert-vdh/nih-plug/tree/master) it is based on. Future developments include
+`Distall` is based on [nih-plug](https://github.com/robbert-vdh/nih-plug/tree/master) and currently only implements a **Soft clipping** and a **Hard clipping** distortion. Future developments include:
 
-* low pass filter
 * DRY / WET signal separation
 * asymmetric non linear functions explorations
 * non linearity with memory
-* aliasing suppression by oversampling
-* [Vizia](https://github.com/vizia/vizia) based UI
+* aliasing suppression by oversampling:
+  * Lanczos based oversampling
+* UI: solve the following dilemma: keep using this [vizia fork](https://github.com/robbert-vdh/vizia) (well integrated in **nih-plug** but more and more divergent from Vizia development and documentation) or go wild?
 
 
 ## Building
