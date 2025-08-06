@@ -49,7 +49,9 @@ impl CategoricalPicker {
                         Self::button_view(cx, CategoryEvent::Decrement, "<<");
                         Self::text_input_view(cx, display_value_lens);
                         Self::button_view(cx, CategoryEvent::Increment, ">>");
-                    });
+                    })
+                    .child_left(Stretch(1.0))
+                    .child_right(Stretch(1.0));
                 });
             }),
         )
@@ -64,11 +66,10 @@ impl CategoricalPicker {
     }
 
     fn text_input_view(cx: &mut Context, display_value_lens: impl Lens<Target = String>) {
-        Textbox::new(cx, display_value_lens)
-            .class("category")
-            .width(Stretch(1.0))
-            .child_left(Stretch(1.0))
-            .child_right(Stretch(1.0));
+        Textbox::new(cx, display_value_lens).class("category");
+
+        //.child_left(Stretch(1.0))
+        //.child_right(Stretch(1.0));
         //TODO: complete
         //.on_submit(|cx, string, success| {
         //    if success {
