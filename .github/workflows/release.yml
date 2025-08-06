@@ -27,6 +27,9 @@ jobs:
       - name: Collect System Info
         uses: lexbritvin/os-info-action@v1
         id: info
+      - name: Install graphical libs deps (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt install -y libgl-dev libxcursor-dev libxcb-dri2-0-dev libxcb-icccm4-dev libx11-xcb-dev
       - name: Build
         run: |
           cargo xtask bundle distall --release
