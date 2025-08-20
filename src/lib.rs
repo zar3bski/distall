@@ -207,8 +207,8 @@ impl Plugin for DistAll {
 
         for (_, mut block) in buffer.iter_blocks(BLOCK_SIZE) {
             // Smoothing is optionally built into the parameters themselves
-            let pre_gain: f32 = self.params.pre_gain.smoothed.next();
-            let post_gain: f32 = self.params.post_gain.smoothed.next();
+            let pre_gain: f32 = self.params.pre_gain.value();
+            let post_gain: f32 = self.params.post_gain.value();
 
             let oversampler_type = self.params.oversampler.value();
             let distortion_type = self.params.distortion.value().function();
