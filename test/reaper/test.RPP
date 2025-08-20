@@ -1,4 +1,4 @@
-<REAPER_PROJECT 0.1 "7.42/linux-x86_64" 1753263138
+<REAPER_PROJECT 0.1 "7.43/linux-x86_64" 1755702360
   <NOTES 0 2
   >
   RIPPLE 0 0
@@ -18,8 +18,8 @@
   VIDEO_CONFIG 0 0 65792
   PANMODE 3
   PANLAWFLAGS 3
-  CURSOR 7.5
-  ZOOM 100 0 0
+  CURSOR 63.5
+  ZOOM 100 6051 0
   VZOOMEX 6 0
   USE_REC_CFG 0
   RECMODE 1
@@ -41,6 +41,7 @@
   RENDER_ADDTOPROJ 0
   RENDER_STEMS 0
   RENDER_DITHER 0
+  RENDER_TRIM 0 0 0 0
   TIMELOCKMODE 1
   TEMPOENVLOCKMODE 1
   ITEMMIX 1
@@ -147,8 +148,8 @@
     MIDIOUT -1
     MAINSEND 1 0
     <FXCHAIN
-      WNDRECT 48 96 1200 410
-      SHOW 2
+      WNDRECT 48 96 1741 590
+      SHOW 0
       LASTSEL 1
       DOCKED 0
       BYPASS 0 0 0
@@ -162,7 +163,7 @@
       WAK 0 0
       BYPASS 0 0 0
       <CLAP "CLAP: DistAll (David Zarebski)" com.zar3bski.DistAll ""
-        CFG 0 720 270 ""
+        CFG 0 1261 450 ""
         <STATE
           twAAAAAAAAB7InZlcnNpb24iOiIwLjEuMCIsInBhcmFtcyI6eyJkaXN0b3J0aW9uIjp7ImkzMiI6MH0sIm92ZXJzYW1wbGVyIjp7ImkzMiI6MX0sInBvc3RfZ2FpbiI6
           eyJmMzIiOjAuMjUxMTg4NjR9LCJwcmVfZ2FpbiI6eyJmMzIiOjEwLjB9fSwiZmllbGRzIjp7ImVkaXRvci1zdGF0ZSI6IntcInNjYWxlX2ZhY3RvclwiOjEuMH0ifX0=
@@ -209,6 +210,115 @@
         KEYSNAP 0
         TRACKSEL 0
         CFGEDIT 1 1 0 1 0 0 1 1 1 1 1 0.125 0 0 0 0 0 0 0 0 0 0 0 1 0 0.5 0 0 1 64
+      >
+    >
+  >
+  <TRACK {C248BBAF-27E4-3906-92AE-739F8DCAA7A6}
+    NAME Guitar
+    PEAKCOL 16576
+    BEAT -1
+    AUTOMODE 0
+    PANLAWFLAGS 3
+    VOLPAN 1 0 -1 -1 1
+    MUTESOLO 0 0 0
+    IPHASE 0
+    PLAYOFFS 0 1
+    ISBUS 0 0
+    BUSCOMP 0 0 0 0 0
+    SHOWINMIX 1 0.6667 0.5 1 0.5 0 0 0
+    FIXEDLANES 9 0 0 0 0
+    SEL 0
+    REC 0 0 1 0 0 0 0 0
+    VU 64
+    TRACKHEIGHT 0 0 0 0 0 0 0
+    INQ 0 0 0 0.5 100 0 0 100
+    NCHAN 2
+    FX 1
+    TRACKID {C248BBAF-27E4-3906-92AE-739F8DCAA7A6}
+    PERF 0
+    MIDIOUT -1
+    MAINSEND 1 0
+    <FXCHAIN
+      WNDRECT 443 561 1741 590
+      SHOW 1
+      LASTSEL 0
+      DOCKED 0
+      BYPASS 0 0 0
+      <CLAP "CLAP: DistAll (David Zarebski)" com.zar3bski.DistAll ""
+        CFG 0 1261 450 ""
+        <STATE
+          twAAAAAAAAB7InZlcnNpb24iOiIwLjEuMCIsInBhcmFtcyI6eyJkaXN0b3J0aW9uIjp7ImkzMiI6MH0sIm92ZXJzYW1wbGVyIjp7ImkzMiI6MX0sInBvc3RfZ2FpbiI6
+          eyJmMzIiOjAuMjUxMTg4NjR9LCJwcmVfZ2FpbiI6eyJmMzIiOjEwLjB9fSwiZmllbGRzIjp7ImVkaXRvci1zdGF0ZSI6IntcInNjYWxlX2ZhY3RvclwiOjEuMH0ifX0=
+        >
+      >
+      FLOATPOS 0 0 0 0
+      FXID {14463703-D094-E4DF-3BC5-B30A697A58F0}
+      WAK 0 0
+    >
+    <ITEM
+      POSITION 8
+      SNAPOFFS 0
+      LENGTH 20.37655328798186
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0 0 1 0 0 0
+      FADEOUT 1 0 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4F99DB9C-B2C4-9AFA-17D1-07BA84DCF346}
+      IID 3
+      NAME "01-lead guitar-250820_1453.wav"
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {747B833E-9650-E7E4-D912-2D170650914A}
+      <SOURCE WAVE
+        FILE "Media/01-lead guitar-250820_1453.wav"
+      >
+    >
+    <ITEM
+      POSITION 28.37655328796245
+      SNAPOFFS 0
+      LENGTH 37.14063492063492
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0 0 1 0 0 0
+      FADEOUT 1 0 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {4C0FA330-E90C-4BA1-B651-EDF9F2BB150C}
+      IID 4
+      NAME "01-rythm guitar right-250820_1414.wav"
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {BAF03906-4FB1-DB4E-0657-B32B9BDB861E}
+      <SOURCE WAVE
+        FILE "Media/01-rythm guitar right-250820_1414.wav"
+      >
+    >
+    <ITEM
+      POSITION 65.51718820864335
+      SNAPOFFS 0
+      LENGTH 38.13981859410431
+      LOOP 1
+      ALLTAKES 0
+      FADEIN 1 0 0 1 0 0 0
+      FADEOUT 1 0 0 1 0 0 0
+      MUTE 0 0
+      SEL 0
+      IGUID {7FACA7BB-08D1-682B-E9AD-B1735A4CC560}
+      IID 5
+      NAME "02-rythm guitar right-250820_1416.wav"
+      VOLPAN 1 0 1 -1
+      SOFFS 0
+      PLAYRATE 1 1 0 -1 0 0.0025
+      CHANMODE 0
+      GUID {4C02BDDA-0496-6956-C2D7-05B0B586014E}
+      <SOURCE WAVE
+        FILE "Media/02-rythm guitar right-250820_1416.wav"
       >
     >
   >

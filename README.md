@@ -48,3 +48,7 @@ This is the raw sound. Use it mainly to produce aggressive old-school/industrial
 x2 oversampling using a serie of Biquad based **low pass filters** before and after the distortion function.
 
 ![](docs/imgs/soft_clip_naive_oversampling.png)
+
+## Testing
+
+`./test` contains a few tracks using distall. Many thanks to Nicolas Cazin for his guitar tracks.
