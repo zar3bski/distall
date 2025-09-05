@@ -179,6 +179,13 @@ impl Plugin for DistAll {
             .push(NaiveOversampler::new(_buffer_config.sample_rate));
         self.naive_oversamplers
             .push(NaiveOversampler::new(_buffer_config.sample_rate));
+        let oversampler_type = self.params.oversampler.value();
+        match oversampler_type {
+            Oversampler::None => (),
+            Oversampler::NaiveOversampler => {
+                _context.set_latency_samples(self.naive_oversamplers[0].latency())
+            }
+        }
         true
     }
 
@@ -219,7 +226,9 @@ impl Plugin for DistAll {
                     Oversampler::None => {
                         distortion_type(pre_gain, post_gain, block.get_mut(channel_index).unwrap());
                     }
+
                     Oversampler::NaiveOversampler => {
+                        _context.set_latency_samples(self.naive_oversamplers[0].latency());
                         match channel_index {
                             0 => self.naive_oversamplers[0].process(
                                 block.get_mut(channel_index).unwrap(),

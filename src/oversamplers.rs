@@ -19,6 +19,7 @@ pub trait Oversampling {
     fn downsample(&mut self, block: &mut [f32]);
     fn process(&mut self, block: &mut [f32], f: Distortion, pre_gain: f32, post_gain: f32);
     fn reset(&mut self);
+    fn latency(&mut self) -> u32;
 }
 
 //
@@ -78,5 +79,11 @@ impl Oversampling for NaiveOversampler {
     fn reset(&mut self) {
         self.filter_upsample.reset();
         self.filter_downsample.reset();
+    }
+
+    fn latency(&mut self) -> u32 {
+        let total_stage_latency = 4.0; // FIXME: arbitrary value for testing. Compute a proper one
+        let effective_latency = total_stage_latency as f32 / 2 as f32;
+        effective_latency as u32
     }
 }
