@@ -4,6 +4,7 @@ mod filters;
 mod oversamplers;
 mod utils;
 
+use crossbeam::channel::{unbounded, Receiver, Sender};
 use nih_plug::prelude::*;
 use nih_plug_vizia::ViziaState;
 use std::sync::Arc;
@@ -21,12 +22,21 @@ use crate::{
 /// The time it takes for the peak meter to decay by 12 dB after switching to complete silence.
 const PEAK_METER_DECAY_MS: f64 = 150.0;
 
+enum DistAllBackgroundTasks {
+    PreGainCalculation,
+    PostGainCalculation,
+}
+
 struct DistAll {
     params: Arc<DistAllParams>,
     naive_oversamplers: Vec<NaiveOversampler>,
     peak_meter_pre: Arc<AtomicF32>,
     peak_meter_post: Arc<AtomicF32>,
     peak_meter_decay_weight: f32,
+    pre_gain_channel: (Sender<[Vec<f32>; 2]>, Receiver<[Vec<f32>; 2]>),
+    post_gain_channel: (Sender<[Vec<f32>; 2]>, Receiver<[Vec<f32>; 2]>),
+    upstream_clonned_buffer: [Vec<f32>; 2],
+    downstream_clonned_buffer: [Vec<f32>; 2],
 }
 
 #[derive(Params)]
@@ -54,7 +64,11 @@ impl Default for DistAll {
             naive_oversamplers: vec![],
             peak_meter_pre: Arc::new(AtomicF32::new(util::MINUS_INFINITY_DB)),
             peak_meter_post: Arc::new(AtomicF32::new(util::MINUS_INFINITY_DB)),
-            peak_meter_decay_weight: 1.0,
+            peak_meter_decay_weight: 0.95,
+            pre_gain_channel: unbounded(),
+            post_gain_channel: unbounded(),
+            upstream_clonned_buffer: [vec![], vec![]],
+            downstream_clonned_buffer: [vec![], vec![]],
         }
     }
 }
@@ -147,7 +161,38 @@ impl Plugin for DistAll {
     // More advanced plugins can use this to run expensive background tasks. See the field's
     // documentation for more information. `()` means that the plugin does not have any background
     // tasks.
-    type BackgroundTask = ();
+    type BackgroundTask = DistAllBackgroundTasks;
+
+    fn task_executor(&mut self) -> TaskExecutor<Self> {
+        let pre_gain_channel_receiver = self.pre_gain_channel.1.clone();
+        let post_gain_channel_receiver = self.post_gain_channel.1.clone();
+        let peak_meter_pre = self.peak_meter_pre.clone();
+        let peak_meter_post = self.peak_meter_post.clone();
+        let peak_meter_decay_weight = self.peak_meter_decay_weight.clone();
+
+        Box::new(move |task| match task {
+            DistAllBackgroundTasks::PreGainCalculation => {
+                match pre_gain_channel_receiver.try_recv() {
+                    Ok(vec) => {
+                        gain_meter_calculator(vec, &peak_meter_pre, peak_meter_decay_weight);
+                    }
+                    Err(_) => {
+                        println!("Pre Gain calculator: error retreiving data from channel")
+                    }
+                }
+            }
+            DistAllBackgroundTasks::PostGainCalculation => {
+                match post_gain_channel_receiver.try_recv() {
+                    Ok(vec) => {
+                        gain_meter_calculator(vec, &peak_meter_post, peak_meter_decay_weight);
+                    }
+                    Err(_) => {
+                        println!("Post Gain calculator: error retreiving data from channel")
+                    }
+                }
+            }
+        })
+    }
 
     fn params(&self) -> Arc<dyn Params> {
         self.params.clone()
@@ -179,6 +224,20 @@ impl Plugin for DistAll {
             .push(NaiveOversampler::new(_buffer_config.sample_rate));
         self.naive_oversamplers
             .push(NaiveOversampler::new(_buffer_config.sample_rate));
+
+        // Gain calculation handled in the background
+        self.upstream_clonned_buffer = [
+            Vec::with_capacity(_buffer_config.max_buffer_size as usize),
+            Vec::with_capacity(_buffer_config.max_buffer_size as usize),
+        ];
+
+        self.downstream_clonned_buffer = [
+            Vec::with_capacity(_buffer_config.max_buffer_size as usize),
+            Vec::with_capacity(_buffer_config.max_buffer_size as usize),
+        ];
+        _context.execute(Self::BackgroundTask::PreGainCalculation);
+        _context.execute(Self::BackgroundTask::PostGainCalculation);
+
         true
     }
 
@@ -196,13 +255,31 @@ impl Plugin for DistAll {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        // Input gain calculator (TO MOVE IN DISTINCT THREAD)
         if self.params.editor_state.is_open() {
-            gain_meter_calculator(
-                buffer.iter_samples(),
-                &self.peak_meter_pre,
-                self.peak_meter_decay_weight,
-            )
+            _context.execute_background(Self::BackgroundTask::PreGainCalculation);
+            _context.execute_background(Self::BackgroundTask::PostGainCalculation);
+
+            match self
+                .pre_gain_channel
+                .0
+                .try_send(self.upstream_clonned_buffer.clone())
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("Error sending data to Pre Gain thread calculator: {e}")
+                }
+            }
+
+            match self
+                .post_gain_channel
+                .0
+                .try_send(self.downstream_clonned_buffer.clone())
+            {
+                Ok(_) => {}
+                Err(e) => {
+                    println!("Error sending data to Post Gain thread calculator: {e}")
+                }
+            }
         }
 
         for (_, mut block) in buffer.iter_blocks(BLOCK_SIZE) {
@@ -215,20 +292,25 @@ impl Plugin for DistAll {
             let channels = block.channels();
 
             for channel_index in 0..channels {
+                let block_channel: &mut [f32] = block.get_mut(channel_index).unwrap();
+
+                self.upstream_clonned_buffer[channel_index].clear();
+                self.upstream_clonned_buffer[channel_index].extend_from_slice(&block_channel);
+
                 match oversampler_type {
                     Oversampler::None => {
-                        distortion_type(pre_gain, post_gain, block.get_mut(channel_index).unwrap());
+                        distortion_type(pre_gain, post_gain, block_channel);
                     }
                     Oversampler::NaiveOversampler => {
                         match channel_index {
                             0 => self.naive_oversamplers[0].process(
-                                block.get_mut(channel_index).unwrap(),
+                                block_channel,
                                 distortion_type,
                                 pre_gain,
                                 post_gain,
                             ),
                             1 => self.naive_oversamplers[1].process(
-                                block.get_mut(channel_index).unwrap(),
+                                block_channel,
                                 distortion_type,
                                 pre_gain,
                                 post_gain,
@@ -237,16 +319,9 @@ impl Plugin for DistAll {
                         };
                     }
                 }
+                self.downstream_clonned_buffer[channel_index].clear();
+                self.downstream_clonned_buffer[channel_index].extend_from_slice(&block_channel);
             }
-        }
-
-        // output gain calculator (TO MOVE IN DISTINCT THREAD)
-        if self.params.editor_state.is_open() {
-            gain_meter_calculator(
-                buffer.iter_samples(),
-                &self.peak_meter_post,
-                self.peak_meter_decay_weight,
-            )
         }
 
         ProcessStatus::Normal

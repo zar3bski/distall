@@ -24,6 +24,7 @@ nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", features = [
 # nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", default-features = false, features = ["assert_process_allocs"] }
 nih_plug_vizia = { git = "https://github.com/robbert-vdh/nih-plug.git", default-features = true }
 atomic_float = "0.1"
+crossbeam = "0.8.4"
 
 [profile.release]
 lto = "thin"

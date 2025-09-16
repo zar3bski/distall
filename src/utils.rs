@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
 use atomic_float::AtomicF32;
-use nih_plug::buffer::SamplesIter;
 
 pub fn gain_meter_calculator(
-    samples: SamplesIter,
+    samples: [Vec<f32>; 2],
     peak_meter: &Arc<AtomicF32>,
     peak_meter_decay_weight: f32,
 ) {
@@ -12,7 +11,7 @@ pub fn gain_meter_calculator(
         let num_samples = channel_samples.len();
         let mut amplitude = 0.0;
         for sample in channel_samples {
-            amplitude += *sample;
+            amplitude += sample;
         }
         amplitude = (amplitude / num_samples as f32).abs();
         let current_peak_meter = peak_meter.load(std::sync::atomic::Ordering::Relaxed);
