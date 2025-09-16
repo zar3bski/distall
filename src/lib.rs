@@ -33,10 +33,10 @@ struct DistAll {
     peak_meter_pre: Arc<AtomicF32>,
     peak_meter_post: Arc<AtomicF32>,
     peak_meter_decay_weight: f32,
-    pre_gain_channel: (Sender<[Vec<f32>; 2]>, Receiver<[Vec<f32>; 2]>),
-    post_gain_channel: (Sender<[Vec<f32>; 2]>, Receiver<[Vec<f32>; 2]>),
-    upstream_clonned_buffer: [Vec<f32>; 2],
-    downstream_clonned_buffer: [Vec<f32>; 2],
+    pre_gain_channel: (Sender<Vec<f32>>, Receiver<Vec<f32>>),
+    post_gain_channel: (Sender<Vec<f32>>, Receiver<Vec<f32>>),
+    upstream_clonned_buffer: Vec<f32>,
+    downstream_clonned_buffer: Vec<f32>,
 }
 
 #[derive(Params)]
@@ -67,8 +67,8 @@ impl Default for DistAll {
             peak_meter_decay_weight: 0.95,
             pre_gain_channel: unbounded(),
             post_gain_channel: unbounded(),
-            upstream_clonned_buffer: [vec![], vec![]],
-            downstream_clonned_buffer: [vec![], vec![]],
+            upstream_clonned_buffer: vec![],
+            downstream_clonned_buffer: vec![],
         }
     }
 }
@@ -226,15 +226,11 @@ impl Plugin for DistAll {
             .push(NaiveOversampler::new(_buffer_config.sample_rate));
 
         // Gain calculation handled in the background
-        self.upstream_clonned_buffer = [
-            Vec::with_capacity(_buffer_config.max_buffer_size as usize),
-            Vec::with_capacity(_buffer_config.max_buffer_size as usize),
-        ];
+        self.upstream_clonned_buffer =
+            Vec::with_capacity(_buffer_config.max_buffer_size as usize * 2);
+        self.downstream_clonned_buffer =
+            Vec::with_capacity(_buffer_config.max_buffer_size as usize * 2);
 
-        self.downstream_clonned_buffer = [
-            Vec::with_capacity(_buffer_config.max_buffer_size as usize),
-            Vec::with_capacity(_buffer_config.max_buffer_size as usize),
-        ];
         _context.execute(Self::BackgroundTask::PreGainCalculation);
         _context.execute(Self::BackgroundTask::PostGainCalculation);
 
@@ -255,6 +251,51 @@ impl Plugin for DistAll {
         _aux: &mut AuxiliaryBuffers,
         _context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
+        for (_, mut block) in buffer.iter_blocks(BLOCK_SIZE) {
+            // Smoothing is optionally built into the parameters themselves
+            let pre_gain: f32 = self.params.pre_gain.value();
+            let post_gain: f32 = self.params.post_gain.value();
+
+            let oversampler_type = self.params.oversampler.value();
+            let distortion_type = self.params.distortion.value().function();
+            let channels = block.channels();
+
+            self.upstream_clonned_buffer.clear();
+            self.downstream_clonned_buffer.clear();
+
+            for channel_index in 0..channels {
+                let block_channel: &mut [f32] = block.get_mut(channel_index).unwrap();
+
+                self.upstream_clonned_buffer
+                    .extend_from_slice(&block_channel);
+
+                match oversampler_type {
+                    Oversampler::None => {
+                        distortion_type(pre_gain, post_gain, block_channel);
+                    }
+                    Oversampler::NaiveOversampler => {
+                        match channel_index {
+                            0 => self.naive_oversamplers[0].process(
+                                block_channel,
+                                distortion_type,
+                                pre_gain,
+                                post_gain,
+                            ),
+                            1 => self.naive_oversamplers[1].process(
+                                block_channel,
+                                distortion_type,
+                                pre_gain,
+                                post_gain,
+                            ),
+                            _ => panic!("Dual channel only"),
+                        };
+                    }
+                }
+
+                self.downstream_clonned_buffer
+                    .extend_from_slice(&block_channel);
+            }
+        }
         if self.params.editor_state.is_open() {
             _context.execute_background(Self::BackgroundTask::PreGainCalculation);
             _context.execute_background(Self::BackgroundTask::PostGainCalculation);
@@ -282,48 +323,6 @@ impl Plugin for DistAll {
             }
         }
 
-        for (_, mut block) in buffer.iter_blocks(BLOCK_SIZE) {
-            // Smoothing is optionally built into the parameters themselves
-            let pre_gain: f32 = self.params.pre_gain.value();
-            let post_gain: f32 = self.params.post_gain.value();
-
-            let oversampler_type = self.params.oversampler.value();
-            let distortion_type = self.params.distortion.value().function();
-            let channels = block.channels();
-
-            for channel_index in 0..channels {
-                let block_channel: &mut [f32] = block.get_mut(channel_index).unwrap();
-
-                self.upstream_clonned_buffer[channel_index].clear();
-                self.upstream_clonned_buffer[channel_index].extend_from_slice(&block_channel);
-
-                match oversampler_type {
-                    Oversampler::None => {
-                        distortion_type(pre_gain, post_gain, block_channel);
-                    }
-                    Oversampler::NaiveOversampler => {
-                        match channel_index {
-                            0 => self.naive_oversamplers[0].process(
-                                block_channel,
-                                distortion_type,
-                                pre_gain,
-                                post_gain,
-                            ),
-                            1 => self.naive_oversamplers[1].process(
-                                block_channel,
-                                distortion_type,
-                                pre_gain,
-                                post_gain,
-                            ),
-                            _ => panic!("Dual channel only"),
-                        };
-                    }
-                }
-                self.downstream_clonned_buffer[channel_index].clear();
-                self.downstream_clonned_buffer[channel_index].extend_from_slice(&block_channel);
-            }
-        }
-
         ProcessStatus::Normal
     }
 }
@@ -343,7 +342,7 @@ impl ClapPlugin for DistAll {
 }
 
 impl Vst3Plugin for DistAll {
-    const VST3_CLASS_ID: [u8; 16] = *b"Exactly16Chars!!";
+    const VST3_CLASS_ID: [u8; 16] = *b"DistAllPluginGen";
 
     // And also don't forget to change these categories
     const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] = &[
